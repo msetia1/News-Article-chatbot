@@ -19,7 +19,7 @@ const rl = readline.createInterface({
 // Allows the chatbot to remember the conversation history by providing it with the previous messages
 let conversationHistory = [
     { role: 'system', content: 'You are a helpful assistant' },
-    { role: 'user', content: 'Remember, you are only to answer questions about the article I provide you' }
+    { role: 'user', content: 'Remember, you are only to answer questions about the article I provide you and about topics related/relevant to the article' }
 ]
 
 
@@ -57,7 +57,7 @@ async function generateText(message) {
         if (conversationHistory.length > 10) {
             const summary = await summarizeHistory(conversationHistory);
             conversationHistory = [
-                { role: 'system', content: 'You are a helpful assistant that only answers questions about the article you are provided' },
+                { role: 'system', content: 'You are a helpful assistant that only answers questions about the article you are provided and topics related/relevant to the article' },
                 { role: 'user', content: `Here is a news article: ${articleContent}` },
                 { role: 'assistant', content: `Summary ${summary}` }
             ]
@@ -69,15 +69,40 @@ async function generateText(message) {
 }
 
 // Continuously prompts user to converse with the chatbot until 'exit' is typed
-function promptUser() {
+async function promptUser() {
     console.log('\nType "exit" to end the conversation\n');
+    rl.question('Enter the URL of the CNN article you would like to talk about: ', async (url) => {
+        if (url.toLowerCase().trim() === 'exit') {
+            rl.close();
+            return;
+        }
+
+        let urlParts = url.split('.');
+        //Verifying the url provided is a CNN link
+        if (urlParts.length > 1 && urlParts[1] === 'cnn') {
+            try {
+                const body = await getArticleBody(url);
+                await generateText(`These are the contents of the article: ${body}`);
+                continuePrompting();
+            } catch (err) {
+                console.error('Error: ', err);
+                rl.close();
+            }
+        } else {
+            console.log('Please enter a valid CNN article link');
+            promptUser();
+        }
+    })
+}
+
+async function continuePrompting() {
     rl.question('You: ', async (question) => {
         if (question.toLowerCase().trim() === 'exit') {
             rl.close();
             return;
         }
         await generateText(question);
-        promptUser();
+        continuePrompting();
     });
 }
 
@@ -86,7 +111,7 @@ async function summarizeHistory(history) {
     const summaryResponse = await openai.chat.completions.create({
         model: 'gpt-4o',
         messages: [
-            { role: 'system', content: 'You are a helpful assistant that only answers questions about the article you are provided'},
+            { role: 'system', content: 'You are a helpful assistant that only answers questions about the article you are provided and topics related/relevant to the article'},
             { role: 'user', content: `Summarize this conversation in 300 tokens or less: ${JSON.stringify(history)}`}
         ],
     });
@@ -94,16 +119,5 @@ async function summarizeHistory(history) {
 }
 
 let articleContent;
-
-rl.question('Enter the URL of the article you would like to talk about: ', (url) => {
-    getArticleBody(url).then((body) => {
-        articleContent = body;
-        generateText(`These are the contents of the article: ${body}`).then(() => {
-            promptUser();
-        })
-    }).catch(err => {
-        console.error('Error:', err);
-        rl.close();
-    });
-});
+promptUser();
 
