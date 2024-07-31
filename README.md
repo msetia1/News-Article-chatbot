@@ -18,8 +18,3 @@ let conversationHistory = [
     { role: 'user', content: 'Remember, you are only to answer questions about the article I provide you' }
 ]
 ```
-
-<br>
-
-
-_For Lumin Digital employees: If you are having trouble getting past Zscaler, export the Zscaler Root CA from Keychain Access on your computer as a .pem file, and then in the `requests` module, add the file path to the Zscaler Root CA as a string to the `verify` variable._ 

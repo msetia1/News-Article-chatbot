@@ -19,7 +19,7 @@ const rl = readline.createInterface({
 // Allows the chatbot to remember the conversation history by providing it with the previous messages
 let conversationHistory = [
     { role: 'system', content: 'You are a helpful assistant' },
-    { role: 'user', content: 'Remember, you are only to answer questions about the article I provide you and about topics related/relevant to the article' }
+    { role: 'user', content: 'Remember, you are only to answer questions about the article I provide you' }
 ]
 
 
@@ -57,7 +57,7 @@ async function generateText(message) {
         if (conversationHistory.length > 10) {
             const summary = await summarizeHistory(conversationHistory);
             conversationHistory = [
-                { role: 'system', content: 'You are a helpful assistant that only answers questions about the article you are provided and topics related/relevant to the article' },
+                { role: 'system', content: 'You are a helpful assistant that only answers questions about the article you are provided' },
                 { role: 'user', content: `Here is a news article: ${articleContent}` },
                 { role: 'assistant', content: `Summary ${summary}` }
             ]
@@ -111,7 +111,7 @@ async function summarizeHistory(history) {
     const summaryResponse = await openai.chat.completions.create({
         model: 'gpt-4o',
         messages: [
-            { role: 'system', content: 'You are a helpful assistant that only answers questions about the article you are provided and topics related/relevant to the article'},
+            { role: 'system', content: 'You are a helpful assistant that only answers questions about the article you are provided'},
             { role: 'user', content: `Summarize this conversation in 300 tokens or less: ${JSON.stringify(history)}`}
         ],
     });
